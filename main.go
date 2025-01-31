@@ -7,42 +7,40 @@ import (
 	"net/http"
 )
 
-var task string
-
-type requestBody struct {
-	Message string `json:"message"`
-}
-
-func GetHandler(w http.ResponseWriter, r *http.Request) {
-	if task == "" {
-		fmt.Fprintln(w, "Hello, world!")
-	} else {
-		fmt.Fprintf(w, "Hello, %s\n", task)
-	}
-}
-
-func PostHandler(w http.ResponseWriter, r *http.Request) {
-	var reqBody requestBody
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&reqBody)
-	if err != nil {
-		//fmt.Fprintln(w, "Ошибка парсинга (я очень крутой узнал новое слово)")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+func GetMessage(w http.ResponseWriter, r *http.Request) {
+	var allmessages []Message
+	geterr := DB.Find(&allmessages)
+	if geterr != nil {
+		fmt.Errorf("Ошибка извлечения пользователей: %w", geterr)
 		return
 	}
+	fmt.Fprintln(w, "All messages:", allmessages)
+}
 
-	task = reqBody.Message
-
-	fmt.Fprintf(w, "Task set to: %s", task)
+func CreateMessage(w http.ResponseWriter, r *http.Request) {
+	var forproces Message
+	decoder := json.NewDecoder(r.Body)
+	decerr := decoder.Decode(&forproces)
+	if decerr != nil {
+		fmt.Errorf("Ошибка: %w", decerr)
+		return
+	}
+	createrr := DB.Create(&forproces)
+	if createrr != nil {
+		fmt.Errorf("Ошибка добавления в БД: %w", createrr)
+		return
+	}
+	fmt.Fprintln(w, "Message created in Data Base :)")
 }
 
 func main() {
+	InitDB()
+
+	DB.AutoMigrate(&Message{})
+
 	router := mux.NewRouter()
-
-	router.HandleFunc("/api/hello", GetHandler).Methods("GET")
-
-	router.HandleFunc("/api/task", PostHandler).Methods("POST")
-
+	router.HandleFunc("/api/messages", CreateMessage).Methods("POST")
+	router.HandleFunc("/api/messages", GetMessage).Methods("GET")
 	http.ListenAndServe("localhost:8080", router)
 
 }
