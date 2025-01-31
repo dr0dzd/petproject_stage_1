@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -33,7 +32,12 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error add in DB", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Message created in Data Base :)")
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(&forproces); err != nil {
+		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		return
+	}
 }
 
 func main() {
