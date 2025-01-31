@@ -10,11 +10,11 @@ import (
 func GetMessage(w http.ResponseWriter, r *http.Request) {
 	var allmessages []Message
 	geterr := DB.Find(&allmessages)
-	if geterr != nil {
-		fmt.Errorf("Ошибка извлечения пользователей: %w", geterr)
+	if geterr.Error != nil {
+		fmt.Fprintf(w, "Data fetch error")
 		return
 	}
-	fmt.Fprintln(w, "All messages:", allmessages)
+	fmt.Fprintln(w, "All messages:\n", allmessages)
 }
 
 func CreateMessage(w http.ResponseWriter, r *http.Request) {
@@ -22,15 +22,15 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decerr := decoder.Decode(&forproces)
 	if decerr != nil {
-		fmt.Errorf("Ошибка: %w", decerr)
+		fmt.Fprintf(w, "Error of decoding json")
 		return
 	}
 	createrr := DB.Create(&forproces)
-	if createrr != nil {
-		fmt.Errorf("Ошибка добавления в БД: %w", createrr)
+	if createrr.Error != nil {
+		fmt.Fprintf(w, "Error add in DB")
 		return
 	}
-	fmt.Fprintln(w, "Message created in Data Base :)")
+	fmt.Fprintf(w, "Message created in Data Base :)")
 }
 
 func main() {
