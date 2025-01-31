@@ -11,23 +11,26 @@ func GetMessage(w http.ResponseWriter, r *http.Request) {
 	var allmessages []Message
 	geterr := DB.Find(&allmessages)
 	if geterr.Error != nil {
-		fmt.Fprintf(w, "Data fetch error")
+		http.Error(w, "Data fetch error", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(w, "All messages:\n", allmessages)
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	if senderr := encoder.Encode(allmessages); senderr != nil {
+		http.Error(w, "Error of transformation", http.StatusInternalServerError)
+		return
+	}
 }
 
 func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	var forproces Message
 	decoder := json.NewDecoder(r.Body)
-	decerr := decoder.Decode(&forproces)
-	if decerr != nil {
-		fmt.Fprintf(w, "Error of decoding json")
+	if decerr := decoder.Decode(&forproces); decerr != nil {
+		http.Error(w, "Error of decoding json", http.StatusInternalServerError)
 		return
 	}
-	createrr := DB.Create(&forproces)
-	if createrr.Error != nil {
-		fmt.Fprintf(w, "Error add in DB")
+	if createrr := DB.Create(&forproces); createrr.Error != nil {
+		http.Error(w, "Error add in DB", http.StatusInternalServerError)
 		return
 	}
 	fmt.Fprintf(w, "Message created in Data Base :)")
