@@ -49,6 +49,12 @@ func UpdateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var smth Message
+	if inDBerr := DB.First(&smth, id).Error; inDBerr != nil {
+		http.Error(w, "Message not found", http.StatusNotFound)
+		return
+	}
+
 	var forUpdate Message
 	if decerr := json.NewDecoder(r.Body).Decode(&forUpdate); decerr != nil {
 		http.Error(w, "Error of decoding json", http.StatusBadRequest)
@@ -69,6 +75,27 @@ func UpdateMessage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func DeleteMessage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, iderr := strconv.Atoi(vars["id"])
+	if iderr != nil {
+		http.Error(w, "Invalid ID", http.StatusInternalServerError)
+		return
+	}
+
+	var smth Message
+	if inDBerr := DB.First(&smth, id).Error; inDBerr != nil {
+		http.Error(w, "Message not found", http.StatusNotFound)
+		return
+	}
+
+	if delerr := DB.Delete(&Message{}, id).Error; delerr != nil {
+		http.Error(w, "Delete Error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func main() {
 	InitDB()
 
@@ -78,8 +105,8 @@ func main() {
 	router.HandleFunc("/api/messages", CreateMessage).Methods("POST")
 	router.HandleFunc("/api/messages", GetMessage).Methods("GET")
 	router.HandleFunc("/api/messages/{id}", UpdateMessage).Methods("PUT")
-	//router.HandleFunc("api/messages/{id}", PatchMessage).Methods("PATCH")
-	//router.HandleFunc("api/messages{id}", DeleteMessage).Methods("DELETE")
+	//router.HandleFunc("/api/messages/{id}", PatchMessage).Methods("PATCH")
+	router.HandleFunc("/api/messages/{id}", DeleteMessage).Methods("DELETE")
 	http.ListenAndServe("localhost:8080", router)
 
 }
