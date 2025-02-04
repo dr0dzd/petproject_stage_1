@@ -39,6 +39,7 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error encoding json", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func UpdateMessage(w http.ResponseWriter, r *http.Request) {
