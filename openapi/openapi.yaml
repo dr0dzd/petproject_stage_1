@@ -17,6 +17,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Task'
+        '500':
+          description: Server internal error
     post:
       summary: Create a new task
       tags:
@@ -35,13 +37,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
-  /tasks/{taskId}:
+        '400':
+          description: Input error, request body is incorrect
+        '500':
+          description: Internal server error
+  /tasks/{task_id}:
     patch:
       summary: Update task
       tags:
         - tasks
       parameters:
-        - name: taskID
+        - name: task_id
           in: path
           required: true
           schema:
@@ -53,18 +59,38 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                task:
-                  type: string
-                is_done:
-                  type: boolean
-              $ref: '#/components/schemas/TaskUpdateRequest'
+              $ref: '#/components/schemas/Task'
       responses:
         '200':
           description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
         '400':
-
+          description: Invalid input, request body is incorrect
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete task
+      tags:
+        - tasks
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint
+      responses:
+        '204':
+          description: Task deleted successfully (no content)
+        '404':
+          description: Task not found
+        '500':
+          description: Internal server error
 
 
 components:
