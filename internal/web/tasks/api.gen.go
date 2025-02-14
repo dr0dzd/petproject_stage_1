@@ -36,10 +36,10 @@ type ServerInterface interface {
 	// (POST /tasks)
 	PostTasks(ctx echo.Context) error
 	// Delete task
-	// (DELETE /tasks/{taskId})
+	// (DELETE /tasks/{task_id})
 	DeleteTasksTaskId(ctx echo.Context, taskId uint) error
 	// Update task
-	// (PATCH /tasks/{taskId})
+	// (PATCH /tasks/{task_id})
 	PatchTasksTaskId(ctx echo.Context, taskId uint) error
 }
 
@@ -69,12 +69,12 @@ func (w *ServerInterfaceWrapper) PostTasks(ctx echo.Context) error {
 // DeleteTasksTaskId converts echo context to params.
 func (w *ServerInterfaceWrapper) DeleteTasksTaskId(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "taskId" -------------
+	// ------------- Path parameter "task_id" -------------
 	var taskId uint
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "taskId", runtime.ParamLocationPath, ctx.Param("taskId"), &taskId)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "task_id", runtime.ParamLocationPath, ctx.Param("task_id"), &taskId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter taskId: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter task_id: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
@@ -85,12 +85,12 @@ func (w *ServerInterfaceWrapper) DeleteTasksTaskId(ctx echo.Context) error {
 // PatchTasksTaskId converts echo context to params.
 func (w *ServerInterfaceWrapper) PatchTasksTaskId(ctx echo.Context) error {
 	var err error
-	// ------------- Path parameter "taskId" -------------
+	// ------------- Path parameter "task_id" -------------
 	var taskId uint
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "taskId", runtime.ParamLocationPath, ctx.Param("taskId"), &taskId)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "task_id", runtime.ParamLocationPath, ctx.Param("task_id"), &taskId)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter taskId: %s", err))
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter task_id: %s", err))
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
@@ -128,8 +128,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/tasks", wrapper.GetTasks)
 	router.POST(baseURL+"/tasks", wrapper.PostTasks)
-	router.DELETE(baseURL+"/tasks/:taskId", wrapper.DeleteTasksTaskId)
-	router.PATCH(baseURL+"/tasks/:taskId", wrapper.PatchTasksTaskId)
+	router.DELETE(baseURL+"/tasks/:task_id", wrapper.DeleteTasksTaskId)
+	router.PATCH(baseURL+"/tasks/:task_id", wrapper.PatchTasksTaskId)
 
 }
 
@@ -191,7 +191,7 @@ func (response PostTasks500Response) VisitPostTasksResponse(w http.ResponseWrite
 }
 
 type DeleteTasksTaskIdRequestObject struct {
-	TaskId uint `json:"taskId"`
+	TaskId uint `json:"task_id"`
 }
 
 type DeleteTasksTaskIdResponseObject interface {
@@ -223,7 +223,7 @@ func (response DeleteTasksTaskId500Response) VisitDeleteTasksTaskIdResponse(w ht
 }
 
 type PatchTasksTaskIdRequestObject struct {
-	TaskId uint `json:"taskId"`
+	TaskId uint `json:"task_id"`
 	Body   *PatchTasksTaskIdJSONRequestBody
 }
 
@@ -273,10 +273,10 @@ type StrictServerInterface interface {
 	// (POST /tasks)
 	PostTasks(ctx context.Context, request PostTasksRequestObject) (PostTasksResponseObject, error)
 	// Delete task
-	// (DELETE /tasks/{taskId})
+	// (DELETE /tasks/{task_id})
 	DeleteTasksTaskId(ctx context.Context, request DeleteTasksTaskIdRequestObject) (DeleteTasksTaskIdResponseObject, error)
 	// Update task
-	// (PATCH /tasks/{taskId})
+	// (PATCH /tasks/{task_id})
 	PatchTasksTaskId(ctx context.Context, request PatchTasksTaskIdRequestObject) (PatchTasksTaskIdResponseObject, error)
 }
 
