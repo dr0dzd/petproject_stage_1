@@ -3,11 +3,7 @@ package handlers
 import (
 	"Golang/internal/taskService"
 	"Golang/internal/web/tasks"
-	"encoding/json"
-	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
-	"net/http"
-	"strconv"
 )
 
 type Handler struct {
@@ -59,39 +55,35 @@ func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObj
 	return response, nil
 }
 
-// начался мой код, который не был зарефакторен
-func (h *Handler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+func (h *Handler) DeleteTasksTaskId(_ context.Context, request tasks.DeleteTasksTaskIdRequestObject) (tasks.DeleteTasksTaskIdResponseObject, error) {
+	taskID := request.TaskId
+	if err := h.Service.DeleteTask(taskID); err != nil {
+		return nil, err
 	}
-	var task taskService.Task
-	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	updated, err := h.Service.UpdateTaskByID(uint(id), task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updated)
+	response := tasks.DeleteTasksTaskId204Response{}
+	return response, nil
 }
 
-func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+func (h *Handler) PatchTasksTaskId(_ context.Context, request tasks.PatchTasksTaskIdRequestObject) (tasks.PatchTasksTaskIdResponseObject, error) {
+	taskRequest := request.Body
+	taskID := request.TaskId
+	TaskToUpdate := taskService.Task{}
+	if taskRequest.Task != nil {
+		TaskToUpdate.Task = *taskRequest.Task
+	}
+	if taskRequest.IsDone != nil {
+		TaskToUpdate.IsDone = *taskRequest.IsDone
+	}
+	UpdatedTask, err := h.Service.UpdateTaskByID(taskID, TaskToUpdate)
+
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
-	reserr := h.Service.DeleteTask(uint(id))
-	if reserr != nil {
-		http.Error(w, reserr.Error(), http.StatusInternalServerError)
-		return
+
+	response := tasks.PatchTasksTaskId200JSONResponse{
+		Id:     &UpdatedTask.ID,
+		Task:   &UpdatedTask.Task,
+		IsDone: &UpdatedTask.IsDone,
 	}
-	w.WriteHeader(http.StatusNoContent)
+	return response, nil
 }
