@@ -22,11 +22,19 @@ migrate:
 migrate-down:
 	$(MIGRATE) down
 
+migrate-delete:
+	migrate-down 1
+	rm -f ./migrations/${NAME}.up.sql ./migrations/${NAME}.down.sql
+
 run:
 	go run cmd/app/main.go
 
-gen:
+gen-tasks:
 	oapi-codegen -config openapi/.openapi -include-tags tasks -package tasks openapi/openapi.yaml > ./internal/web/tasks/api.gen.go
 
+gen-users:
+	oapi-codegen -config openapi/.openapi -include-tags users -package users openapi/openapi.yaml > ./internal/web/users/api.gen.go
+
 lint:
-	golangci-lint run --out-format=colored-line-number
+	golangci-lint cache clean
+	golangci-lint run --timeout=5m --out-format=colored-line-number
