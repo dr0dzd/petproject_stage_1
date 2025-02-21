@@ -1,4 +1,4 @@
-package: api
+package: tasks
 generate:
     strict-server: true
     echo-server: true
