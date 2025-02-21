@@ -24,7 +24,7 @@ paths:
       tags:
         - tasks
       requestBody:
-        description: The task to create
+        description: The task to create (add user_id)
         required: true
         content:
           application/json:
@@ -54,7 +54,7 @@ paths:
             type: integer
             format: uint
       requestBody:
-        description: Data for update
+        description: Data for update (include user_id if needed)
         required: true
         content:
           application/json:
@@ -125,6 +125,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
   /users/{user_id}:
+    get:
+      summary: get user by id
+      tags:
+        - users
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint
+      responses:
+        '200':
+          description: one user with id from path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '404':
+          description: user not found
     patch:
       summary: update user by id
       tags:
@@ -166,8 +186,29 @@ paths:
           description: User deleted
         '404':
           description: user not found
-
-
+  /users/{user_id}/tasks:
+    get:
+      summary: get tasks for specific user
+      tags:
+        - tasks
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint
+      responses:
+        '200':
+          description: a list of tasks for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '404':
+          description: User not found
 
 
 components:
@@ -182,6 +223,9 @@ components:
           type: string
         is_done:
           type: boolean
+        user_id:
+          type: integer
+          format: uint
     User:
       type: object
       properties:
