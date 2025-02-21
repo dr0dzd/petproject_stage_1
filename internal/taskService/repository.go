@@ -1,17 +1,14 @@
 package taskService
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type TaskRepository interface {
-	//CreateTask - передаем в функцию task типа Task из orm.go
-	//возвращаем созданный Task и ошибку
 	CreateTask(task Task) (Task, error)
-	//GetAllTasks - возвращаем массив из всех задач в БД и ошибку
 	GetAllTasks() ([]Task, error)
-	//UpdateTaskByID - передаем id и Task, возвращаем обновленный Task
-	// и ошибку
+	GetTasksByUserID(userID uint) ([]Task, error)
 	UpdateTaskByID(id uint, task Task) (Task, error)
-	//DeleteTask - передаем id для удаления, возращаем только ошибку
 	DeleteTask(id uint) error
 }
 
@@ -19,7 +16,7 @@ type taskRepository struct {
 	db *gorm.DB
 }
 
-func NewTaskRepository(db *gorm.DB) *taskRepository {
+func NewTaskRepository(db *gorm.DB) TaskRepository {
 	return &taskRepository{db: db}
 }
 
@@ -37,6 +34,12 @@ func (r *taskRepository) GetAllTasks() ([]Task, error) {
 	return tasks, result
 }
 
+func (r *taskRepository) GetTasksByUserID(userID uint) ([]Task, error) {
+	var tasks []Task
+	err := r.db.Where("user_id = ?", userID).Find(&tasks).Error
+	return tasks, err
+}
+
 func (r *taskRepository) UpdateTaskByID(id uint, task Task) (Task, error) {
 	var local Task
 	//ищем есть ли запись для обновления, если есть пишем ее в local
@@ -51,14 +54,11 @@ func (r *taskRepository) UpdateTaskByID(id uint, task Task) (Task, error) {
 }
 
 func (r *taskRepository) DeleteTask(id uint) error {
-	var local Task
-	//находим есть ли такая запись и пишем ее в local
-	if finderr := r.db.First(&local, id).Error; finderr != nil {
-		return finderr
+	result := r.db.Unscoped().Delete(&Task{}, id)
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
-	//удаляем local из БД
-	if delerr := r.db.Delete(&local).Error; delerr != nil {
-		return delerr
-	}
-	return nil
+
+	return result.Error
 }
