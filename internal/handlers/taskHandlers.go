@@ -3,7 +3,9 @@ package handlers
 import (
 	"Golang/internal/taskService"
 	"Golang/internal/web/tasks"
+	"github.com/labstack/echo/v4"
 	"golang.org/x/net/context"
+	"net/http"
 )
 
 type TaskHandler struct {
@@ -68,7 +70,7 @@ func (h *TaskHandler) PostTasks(_ context.Context, request tasks.PostTasksReques
 	createdTask, err := h.Service.CreateTask(taskToCreate)
 
 	if err != nil {
-		return nil, err
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "bad request")
 	}
 	response := tasks.PostTasks201JSONResponse{
 		Id:     &createdTask.ID,
