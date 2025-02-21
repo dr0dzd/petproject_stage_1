@@ -1,4 +1,4 @@
-CREATE TABLE Users (
+CREATE TABLE users (
     id    SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE CHECK (email ~* '^[A-Za-z0-9._]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$') ,
     password VARCHAR(255) NOT NULL,
