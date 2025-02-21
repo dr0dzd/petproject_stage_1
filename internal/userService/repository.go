@@ -1,10 +1,13 @@
 package userService
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type UserRepository interface {
 	CreateUser(u User) (User, error)
 	GetUsers() ([]User, error)
+	GetUserByID(id uint) (User, error)
 	UpdateUserByID(id uint, u User) (User, error)
 	DeleteUserByID(id uint) error
 }
@@ -13,7 +16,7 @@ type userRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *userRepository {
+func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
@@ -30,6 +33,12 @@ func (ur *userRepository) GetUsers() ([]User, error) {
 	return AllUsers, err
 }
 
+func (ur *userRepository) GetUserByID(id uint) (User, error) {
+	var user User
+	err := ur.db.First(&user, id).Error
+	return user, err
+}
+
 func (ur *userRepository) UpdateUserByID(id uint, u User) (User, error) {
 	var localUser User
 	if finderr := ur.db.First(&localUser, id).Error; finderr != nil {
@@ -42,10 +51,6 @@ func (ur *userRepository) UpdateUserByID(id uint, u User) (User, error) {
 }
 
 func (ur *userRepository) DeleteUserByID(id uint) error {
-	var localUser User
-	if finderr := ur.db.First(&localUser, id).Error; finderr != nil {
-		return finderr
-	}
-	err := ur.db.Delete(&localUser).Error
+	err := ur.db.Unscoped().Delete(&User{}, id).Error
 	return err
 }
