@@ -4,6 +4,8 @@ import (
 	"Golang/internal/userService"
 	"Golang/internal/web/users"
 	"context"
+	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type UserHandler struct {
@@ -14,11 +16,25 @@ func NewUserHandler(serv *userService.UserService) *UserHandler {
 	return &UserHandler{service: serv}
 }
 
+func (uh *UserHandler) GetUsersUserId(_ context.Context, request users.GetUsersUserIdRequestObject) (users.GetUsersUserIdResponseObject, error) {
+	user, err := uh.service.GetUserByID(request.UserId)
+	if err != nil {
+		return users.GetUsersUserId404Response{}, err
+	}
+	response := users.GetUsersUserId200JSONResponse{
+		Id:       &user.ID,
+		Email:    &user.Email,
+		Password: &user.Password,
+	}
+
+	return response, nil
+}
+
 func (uh *UserHandler) GetUsers(_ context.Context, _ users.GetUsersRequestObject) (users.GetUsersResponseObject, error) {
 	AllUsers, err := uh.service.GetUsers()
 
 	if err != nil {
-		return nil, err
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, "Problem with Data Base")
 	}
 
 	response := users.GetUsers200JSONResponse{}
@@ -58,7 +74,7 @@ func (uh *UserHandler) PostUsers(_ context.Context, request users.PostUsersReque
 
 func (uh *UserHandler) DeleteUsersUserId(_ context.Context, request users.DeleteUsersUserIdRequestObject) (users.DeleteUsersUserIdResponseObject, error) {
 	id := request.UserId
-	if err := uh.service.DeleteTaskByID(uint(id)); err != nil {
+	if err := uh.service.DeleteUserByID(uint(id)); err != nil {
 		return nil, err
 	}
 	response := users.DeleteUsersUserId204Response{}
@@ -66,26 +82,36 @@ func (uh *UserHandler) DeleteUsersUserId(_ context.Context, request users.Delete
 }
 
 func (uh *UserHandler) PatchUsersUserId(_ context.Context, request users.PatchUsersUserIdRequestObject) (users.PatchUsersUserIdResponseObject, error) {
-	req := request.Body
 	id := request.UserId
 	var ForUpdate userService.User
-	if req.Id != nil {
-		ForUpdate.ID = *req.Id
+
+	if err := updateUserFields(&request, &ForUpdate); err != nil {
+		return nil, err
 	}
-	if req.Email != nil {
-		ForUpdate.Email = *req.Email
-	}
-	if req.Password != nil {
-		ForUpdate.Password = *req.Password
-	}
+
 	UpdatedUser, err := uh.service.UpdateUserByID(id, ForUpdate)
 	if err != nil {
 		return nil, err
 	}
+
 	response := users.PatchUsersUserId200JSONResponse{
 		Id:       &UpdatedUser.ID,
 		Email:    &UpdatedUser.Email,
 		Password: &UpdatedUser.Password,
 	}
 	return response, nil
+}
+
+func updateUserFields(request *users.PatchUsersUserIdRequestObject, user *userService.User) error {
+	req := request.Body
+	if req.Id != nil {
+		user.ID = *req.Id
+	}
+	if req.Email != nil {
+		user.Email = *req.Email
+	}
+	if req.Password != nil {
+		user.Password = *req.Password
+	}
+	return nil
 }
